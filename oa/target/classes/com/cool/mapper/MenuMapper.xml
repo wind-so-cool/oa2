@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cool.dao.MenuMapper">
+    <resultMap id="BaseResultMap" type="com.cool.entity.Menu">
+        <id column="MENU_ID" property="menuId" jdbcType="BIGINT"/>
+        <result column="MENU_PARENT_ID" property="menuParentId" jdbcType="BIGINT"/>
+        <result column="MENU_NAME" property="menuName" jdbcType="CHAR"/>
+        <result column="MENU_TYPE" property="menuType" jdbcType="SMALLINT"/>
+        <result column="MENU_PATH" property="menuPath" jdbcType="CHAR"/>
+        <result column="DESC_CONTENT" property="descContent" jdbcType="VARCHAR"/>
+        <result column="PERMISSION_CODE" property="permissionCode" jdbcType="VARCHAR"/>
+        <result column="IS_PUBLISH" property="isPublish" jdbcType="SMALLINT"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    MENU_ID, MENU_PARENT_ID, MENU_NAME, MENU_TYPE, MENU_PATH, DESC_CONTENT, IS_PUBLISH, 
+    CREATED_DATE,permission_code
+  </sql>
+    <sql id="Base_Column_List2">
+    menu1.MENU_ID, menu1.MENU_PARENT_ID, menu1.MENU_NAME, menu1.MENU_TYPE, menu1.MENU_PATH, menu1.DESC_CONTENT, menu1.IS_PUBLISH,
+    menu1.CREATED_DATE,menu1.permission_code
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        select<include refid="Base_Column_List2"/>,menu2.menu_name as menuParentName
+        from sys_menu menu1 left join sys_menu menu2 on menu1.menu_parent_id=menu2.menu_id
+        where menu1.MENU_ID = #{menuId,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from sys_menu
+    where MENU_ID = #{menuId,jdbcType=BIGINT}
+  </delete>
+
+    <insert id="insertSelective" parameterType="com.cool.entity.Menu">
+        insert into sys_menu
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="menuId != null">
+                MENU_ID,
+            </if>
+            <if test="menuParentId != null">
+                MENU_PARENT_ID,
+            </if>
+            <if test="menuName != null">
+                MENU_NAME,
+            </if>
+            <if test="menuType != null">
+                MENU_TYPE,
+            </if>
+            <if test="menuPath != null">
+                MENU_PATH,
+            </if>
+            <if test="descContent != null">
+                DESC_CONTENT,
+            </if>
+            <if test="isPublish != null">
+                IS_PUBLISH,
+            </if>
+            <if test="permissionCode != null">
+                PERMISSION_CODE,
+            </if>
+
+            CREATED_DATE,
+
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="menuId != null">
+                #{menuId,jdbcType=BIGINT},
+            </if>
+            <if test="menuParentId != null">
+                #{menuParentId,jdbcType=BIGINT},
+            </if>
+            <if test="menuName != null">
+                #{menuName,jdbcType=CHAR},
+            </if>
+            <if test="menuType != null">
+                #{menuType,jdbcType=SMALLINT},
+            </if>
+            <if test="menuPath != null">
+                #{menuPath,jdbcType=CHAR},
+            </if>
+            <if test="descContent != null">
+                #{descContent,jdbcType=VARCHAR},
+            </if>
+            <if test="isPublish != null">
+                #{isPublish,jdbcType=SMALLINT},
+            </if>
+            <if test="permissionCode != null">
+                #{permissionCode,jdbcType=VARCHAR},
+            </if>
+            now()
+
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cool.entity.Menu">
+        update sys_menu
+        <set>
+            <if test="menuParentId != null">
+                MENU_PARENT_ID = #{menuParentId,jdbcType=BIGINT},
+            </if>
+            <if test="menuName != null">
+                MENU_NAME = #{menuName,jdbcType=CHAR},
+            </if>
+            <if test="menuType != null">
+                MENU_TYPE = #{menuType,jdbcType=SMALLINT},
+            </if>
+            <if test="menuPath != null">
+                MENU_PATH = #{menuPath,jdbcType=CHAR},
+            </if>
+            <if test="descContent != null">
+                DESC_CONTENT = #{descContent,jdbcType=VARCHAR},
+            </if>
+            <if test="isPublish != null">
+                IS_PUBLISH = #{isPublish,jdbcType=SMALLINT},
+            </if>
+            <if test="permissionCode != null">
+                PERMISSION_CODE=#{permissionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="createdDate != null">
+                CREATED_DATE = #{createdDate,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where MENU_ID = #{menuId,jdbcType=BIGINT}
+    </update>
+
+
+    <select id="getList" resultMap="BaseResultMap">
+        select<include refid="Base_Column_List2"/>,menu2.menu_name as menuParentName
+        from sys_menu menu1 left join sys_menu menu2 on menu1.menu_parent_id=menu2.menu_id
+        order by menu1.created_date desc
+    </select>
+
+    <delete id="batchDel">
+        delete from sys_menu where menu_ID in
+        <foreach close=")" collection="array" item="menuId" open="(" separator=",">
+            ${menuId}
+        </foreach>
+    </delete>
+
+    <select id="getMenuListByParentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"></include> from sys_menu where menu_parent_id=#{id}
+    </select>
+  <!--  <select id="getMenuListByParentIdAndRoleId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"></include> from sys_menu where menu_parent_id=#{id} and MENU_ID not in(select menu_id from sys_role_menu_rel where ROLE_ID=#{roleId})
+    </select>-->
+
+    <select id="getAuthorizedMenuListByRoleId" resultMap="BaseResultMap">
+        select<include refid="Base_Column_List2"/>,menu2.menu_name as menuParentName
+        from sys_menu menu1 left join sys_menu menu2 on menu1.menu_parent_id=menu2.menu_id inner join sys_role_menu_rel rmr on rmr.menu_id=menu1.menu_id and rmr.role_id=#{roleId}
+        order by menu1.created_date desc
+    </select>
+    <delete id="delRoleMenu">
+    delete from sys_role_menu_rel
+    where (menu_id=#{menuId,jdbcType=BIGINT} or menu_id in(select menu_id from sys_menu where MENU_PARENT_ID=#{menuId})) and ROLE_ID=#{roleId}
+  </delete>
+    <delete id="delAllRoleMenu">
+    delete from sys_role_menu_rel where role_id=#{roleId}
+  </delete>
+    <insert id="authorizeMenu">
+        insert into sys_role_menu_rel(
+        ROLE_ID,
+        menu_ID,
+        CREATED_DATE
+        )
+        values<foreach collection="menuIds" separator="," item="menuId">(#{roleId},#{menuId},now())</foreach>
+    </insert>
+
+    <select id="getRoleMenuCount" resultType="Integer">
+        select count(*) from sys_role_menu_rel where role_id=#{roleId} and menu_id=#{menuId}
+    </select>
+
+    <select id="getMenuListByUserId"  resultMap="BaseResultMap">
+        select sm.* from sys_role_user_rel ru inner join sys_role_menu_rel rm on rm.role_id=ru.role_id inner join sys_menu sm on sm.menu_id=rm.menu_id where ru.user_id=#{userId} and sm.IS_PUBLISH=1
+    </select>
+</mapper>

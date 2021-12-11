@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task-3.0.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!-- 扫描web相关的bean -->
+    <context:component-scan base-package="com.cool.controller"/>
+
+
+    <!-- 开启SpringMVC注解模式 -->
+    <mvc:annotation-driven/>
+
+
+    <!-- 开启这个配置 spring才能识别@Scheduled注解 -->
+    <task:annotation-driven scheduler="qbScheduler" mode="proxy"/>
+    <task:scheduler id="qbScheduler" pool-size="10"/>
+
+    <!-- 静态资源默认servlet配置 -->
+    <mvc:default-servlet-handler/>
+    <!--静态资源配置-->
+    <!--    <mvc:resources mapping="/*/static/**" location="/static/"/>-->
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <mvc:resources mapping="/lib/**" location="/lib/"/>
+    <mvc:resources mapping="/skin/**" location="/skin/"/>
+
+    <!--    拦截器-->
+   <!-- <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="jinzhai.filter.RequestFilter"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>-->
+
+    <!-- 配置html 显示ViewResolver -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <!--前缀-->
+        <property name="prefix" value="/application/"/>
+        <!--后缀-->
+        <property name="suffix" value=".jsp"/>
+        <!--越小就先寻找-->
+        <property name="order" value="2"/>
+    </bean>
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"/>
+        <!--最大内存大小-->
+        <property name="maxInMemorySize" value="102400"/>
+        <!--最大文件大小，-1为不限制大小-->
+        <property name="maxUploadSize" value="-1"/>
+
+    </bean>
+
+    <!-- 开启shiro的注解配置 -->
+    <aop:config proxy-target-class="true"></aop:config>
+
+    <!-- 开启注解授权的bean -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+</beans>

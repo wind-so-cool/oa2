@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!-- 1.创建securityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="sessionMode" value="native"/>
+        <property name="realm" ref="userRealm"/>
+        <property name="rememberMeManager" ref="rememberMeManager"/>
+        <property name="cacheManager" ref="cacheManager"/>
+    </bean>
+
+    <!-- 2.把shior中bean的生命周期交给Spring容器管理 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!--
+        3.shiorFilter(shiro和spring整合的filter)
+     -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+
+        <!--引入 securityManager-->
+        <property name="securityManager" ref="securityManager"/>
+
+        <!-- 没有认证后跳转的的url -->
+        <property name="loginUrl" value="/toLogin"/>
+
+        <!-- 认证成功后跳转的url -->
+        <property name="successUrl" value="/index.jsp"/>
+
+        <!-- 没有权限跳转的url -->
+        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+        <property name="filterChainDefinitions">
+            <value>
+
+                <!-- 静态资源需要忽略 -->
+                /common/**=anon
+                /css/**=anon
+                /images/**=anon
+                /js/**=anon
+                /lib/**=anon
+                /skin/**=anon
+                /login=anon
+                /toLogin=anon
+                /application/login.jsp=anon
+                /logout=logout
+                /common/error.jsp=anon
+                /**=authc
+            </value>
+        </property>
+    </bean>
+
+
+
+    <!-- 配置自定义的relam -->
+    <bean id="userRealm" class="com.cool.realm.UserRealm">
+        <property name="credentialsMatcher">
+            <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                <!-- 用的MD5算法加密 -->
+                <property name="hashAlgorithmName" value="MD5"></property>
+                <!-- 加密的次数 -->
+                <property name="hashIterations" value="1024"></property>
+            </bean>
+        </property>
+
+        <!-- 开启缓存 -->
+        <property name="cachingEnabled" value="true"></property>
+
+        <!-- 开启缓存用户授权信息 -->
+        <property name="authorizationCachingEnabled" value="true"></property>
+
+        <!-- 设置缓存机制的名称 -->
+        <property name="authorizationCacheName" value="authorizationCache"></property>
+
+    </bean>
+
+    <!-- 会话Cookie模板 -->
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <!-- 写到浏览器中coookie名称 -->
+        <constructor-arg value="sid"/>
+        <!--设置js是否可以访问cookie，true不能访问 -->
+        <property name="httpOnly" value="true"/>
+        <!-- 保存时长30天,以秒为单位 -->
+        <property name="maxAge" value="2592000"/>
+    </bean>
+
+
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <!-- ipherKey是加密rememberMe Cookie的密钥；默认AES算法 -->
+        <property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+        <!-- 引入上面定义的cookie模板 -->
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
+
+    <!-- 缓存相关的配置 -->
+    <!-- 缓存管理器 -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!-- cache配置文件 -->
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
+    </bean>
+
+
+</beans>
